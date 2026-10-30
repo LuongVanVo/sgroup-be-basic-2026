@@ -1,0 +1,89 @@
+services:
+  # 1. Cơ sở dữ liệu MySQL 8.0
+  mysql:
+    image: mysql:8.0
+    container_name: sgroup_mysql
+    restart: always
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: hihihehe
+      MYSQL_DATABASE: sgroup_db
+      MYSQL_USER: sgroup_user
+      MYSQL_PASSWORD: sgroup_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -phihihehe || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - sgroup_net
+
+  # 2. Redis Caching Server
+  redis:
+    image: redis:7-alpine
+    container_name: sgroup_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - sgroup_net
+
+  # 3. Ứng dụng Backend Node.js Express API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sgroup_backend_api
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      # Kết nối nội bộ qua tên service trong mạng Docker
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: hihihehe
+      DB_NAME: sgroup_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # JWT Authentication
+      JWT_SECRET: 6fe66480-45fb-4509-9b92-c0092ac1e8f9
+      JWT_SECRET_KEY: 6fe66480-45fb-4509-9b92-c0092ac1e8f9
+      JWT_EXPIRES_IN: 1d
+      # Cloudinary Storage
+      CLOUDINARY_CLOUD_NAME: dnswn0tfq
+      CLOUDINARY_API_KEY: 971726316222922
+      CLOUDINARY_API_SECRET: FGCgWaf4pEwE6f8woafSyKp0Y2c
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sgroup_net
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  sgroup_net:
+    driver: bridge

@@ -1,7 +1,8 @@
 let MOCK_USERS = [
-  { id: 1, full_name: 'Nguyen Van An', email: 'an@gmail.com', role: 'admin', is_active: true, password_hash: '$2b$10$abc...' },
-  { id: 2, full_name: 'Tran Thi Binh', email: 'binh@gmail.com', role: 'user', is_active: true, password_hash: '$2b$10$def...' },
-  { id: 3, full_name: 'Le Van Cuong', email: 'cuong@gmail.com', role: 'user', is_active: false, password_hash: '$2b$10$ghi...' },
+  { id: 1, full_name: 'Admin SGroup', email: 'admin@gmail.com', role: 'admin', is_active: true, password_hash: '$2b$10$p6c4LN82KyIbV8sLfdrFM.3XyHRffgC.UZV1zroLDL720aQwg1pD2' },
+  { id: 2, full_name: 'Khách Hàng Mẫu', email: 'customer@gmail.com', role: 'customer', is_active: true, password_hash: '$2b$10$wsk8tATssJbClGGR46qdb.olxAY4u00Jod06jC.7lLNpo.jbpzU4e' },
+  { id: 3, full_name: 'Nguyen Van An', email: 'an@gmail.com', role: 'admin', is_active: true, password_hash: '$2b$10$p6c4LN82KyIbV8sLfdrFM.3XyHRffgC.UZV1zroLDL720aQwg1pD2' },
+  { id: 4, full_name: 'Tran Thi Binh', email: 'binh@gmail.com', role: 'customer', is_active: true, password_hash: '$2b$10$wsk8tATssJbClGGR46qdb.olxAY4u00Jod06jC.7lLNpo.jbpzU4e' },
 ];
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

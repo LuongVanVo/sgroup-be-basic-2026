@@ -1,76 +1,53 @@
-import {
-  getAllUsersFromDB,
-  getUserByIdFromDB,
-  getUserByEmailFromDB,
-  createUserInDB,
-} from '../repositories/mock.data.js';
+import { UserEntity } from '../entities/user.entity.js';
+import * as userRepo from '../repositories/user.repository.js';
+import * as uploadService from './upload.service.js';
 
-import { filterActiveUsers, formatUsers, formatUser } from '../utils/user.utils.js';
-
-export const getUsers = async ({ active } = {}) => {
-  let users = await getAllUsersFromDB();
-
-  if (active !== undefined) {
-    const isActive = active === 'true' || active === true;
-    users = isActive ? filterActiveUsers(users) : users.filter((u) => !u.is_active);
-  }
-
-  return formatUsers(users);
-};
-
-export const getUserById = async (id) => {
-  const numericId = parseInt(id);
-  if (isNaN(numericId)) {
-    const error = new Error('ID người dùng không hợp lệ!');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const user = await getUserByIdFromDB(numericId);
+export const getProfile = async (userId) => {
+  const user = await userRepo.findUserById(userId);
   if (!user) {
-    const error = new Error(`Không tìm thấy người dùng với ID: ${id}`);
-    error.statusCode = 404;
-    throw error;
+    const err = new Error('Không tìm thấy người dùng!');
+    err.statusCode = 404;
+    throw err;
   }
-
-  return formatUser(user);
+  return user.toResponseObject();
 };
 
-export const createUser = async ({ fullName, email, role = 'user', password }) => {
-  // 1. Validation nghiệp vụ
-  if (!fullName || fullName.trim().length < 2) {
-    const error = new Error('Họ và tên phải có ít nhất 2 ký tự!');
-    error.statusCode = 400;
-    throw error;
-  }
+export const updateProfile = async (userId, { fullName, phone }) => {
+  UserEntity.validateUpdateProfile({ fullName, phone });
 
-  if (!email || !email.includes('@')) {
-    const error = new Error('Email không hợp lệ!');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (!password || password.length < 6) {
-    const error = new Error('Mật khẩu phải có tối thiểu 6 ký tự!');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  // 2. Kiểm tra email trùng lặp
-  const existingUser = await getUserByEmailFromDB(email);
-  if (existingUser) {
-    const error = new Error('Email này đã được sử dụng trong hệ thống!');
-    error.statusCode = 409; // 409 Conflict
-    throw error;
-  }
-
-  // 3. Tạo user và lưu vào DB
-  const createdUser = await createUserInDB({
-    fullName: fullName.trim(),
-    email: email.trim().toLowerCase(),
-    role,
-    password,
+  const updatedUser = await userRepo.updateUserProfile(userId, {
+    fullName: fullName ? fullName.trim() : undefined,
+    phone: phone ? phone.trim() : undefined,
   });
 
-  return formatUser(createdUser);
+  return updatedUser.toResponseObject();
+};
+
+export const updateAvatar = async (userId, fileBuffer) => {
+  if (!fileBuffer) {
+    const err = new Error('Không có file ảnh nào được gửi lên!');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // 1. Upload qua Cloudinary Pipeline
+  const uploadResult = await uploadService.uploadImage(fileBuffer, 'ecommerce/avatars');
+  const avatarUrl = uploadResult.secure_url;
+
+  // 2. Cập nhật vào MySQL
+  const updatedUser = await userRepo.updateUserAvatar(userId, avatarUrl);
+
+  return {
+    avatarUrl,
+    user: updatedUser.toResponseObject(),
+  };
+};
+
+export const getAllUsers = async ({ page = 1, limit = 50 } = {}) => {
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.max(1, parseInt(limit) || 50);
+  const offset = (pageNum - 1) * limitNum;
+
+  const users = await userRepo.findAllUsers({ limit: limitNum, offset });
+  return users.map((u) => u.toResponseObject());
 };
