@@ -19,7 +19,7 @@ app.use(morgan('combined'));
 // 2. Healthcheck & Root test route
 app.get('/', (req, res) => {
   res.json({
-    message: '🚀 SGroup Backend E-Commerce API is running!',
+    message: '🚀 SGroup Backend E-Commerce API is running! hahaa',
     environment: process.env.NODE_ENV || 'development',
     redisConnected: isRedisReady(),
     timestamp: new Date().toISOString(),
@@ -27,7 +27,10 @@ app.get('/', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', uptime: process.uptime() });
+  res.status(200).json({ 
+    message: "Xin chao, toi vua trien khai CI CD voi Github Actions.",
+    status: 'OK', 
+    uptime: process.uptime() });
 });
 
 // 3. Toàn bộ API chính được gắn vào tiền tố /api
