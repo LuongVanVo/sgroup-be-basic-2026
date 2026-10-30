@@ -78,7 +78,7 @@ jobs:
             echo "Pull Image latest from Docker Hub....."
             docker compose pull backend
 
-            docker compose up -d --no-deps sgroup_backend_api
+            docker compose up -d --no-deps backend
 
             docker image prune -f
 
